@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+//Global JWT authentication filter for API GatewayValidates JWT tokens before routing requests to downstream microservices.
+
 @Component
 public class JwtAuthFilter implements GlobalFilter {
 
@@ -22,37 +24,36 @@ public class JwtAuthFilter implements GlobalFilter {
     };
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) { // filter() is the entry point of gateway,exchange is request-response class,chain filter route it to next filter
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-        String path = exchange.getRequest().getURI().getPath(); // checking request path
+        String path = exchange.getRequest().getURI().getPath();
 
-        // Allow public URLs
-        for (String open : publicEndpoints) {
-            if (path.startsWith(open)) {
-                return chain.filter(exchange);
-            }
+        // ✅ Bypass JWT check for auth APIs
+        if (path.startsWith("/auth/")) {
+            return chain.filter(exchange);
         }
 
-        // Check for Authorization header
-        if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
-        }
-
-        // Extract token
         String authHeader = exchange.getRequest()
                 .getHeaders()
                 .getFirst(HttpHeaders.AUTHORIZATION);
 
-        String token = authHeader.replace("Bearer ", "");
-
-        // Validate token
-        if (!jwtUtil.isTokenValid(token)) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
 
-        // Token valid → continue forward
-        return chain.filter(exchange); // Gateway ka request–response wrapper. if we do not use this request will not forward to microservices
+        String token = authHeader.substring(7);
+
+        try {
+            if (!jwtUtil.isTokenValid(token)) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+        } catch (Exception e) {
+            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+            return exchange.getResponse().setComplete();
+        }
+
+        return chain.filter(exchange);
     }
 }

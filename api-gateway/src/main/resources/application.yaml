@@ -15,7 +15,7 @@ spring:
       routes:
 
 
-        - id: user-service
+        - id: USER-SERVICE
           uri: lb://USER-SERVICE
           predicates:
             - Path=/users/**, /auth/**     # Include auth endpoints
