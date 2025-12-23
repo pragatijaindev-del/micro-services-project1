@@ -9,8 +9,6 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-//It validates user, checks product stock,and creates the order.
-
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -27,26 +25,28 @@ public class OrderServiceImpl implements OrderService {
     @CircuitBreaker(name = "productService", fallbackMethod = "orderFallback")
     public Order createOrder(Order order) {
 
-        // Business validation: quantity must be valid
-        if (order.getQuantity() == null || order.getQuantity() <= 0) {
-            throw new BusinessException("Order quantity must be greater than zero");
+        // 1️⃣ Stock validation (FIXED)
+        if (order.getStock() == null || order.getStock() <= 0) {
+            throw new BusinessException("Order stock must be greater than zero");
         }
 
-        // Validate user existence (throws exception if invalid)
+        // 2️⃣ Validate user
         userClient.validateUser(order.getUserId());
 
-        // Reduce product stock (throws exception if insufficient)
-        productClient.reduceProductStock(order.getProductId(), order.getQuantity());
+        // 3️⃣ Reduce product stock
+        productClient.reduceProductStock(
+                order.getProductId(),
+                order.getStock()
+        );
 
-        // Save order after successful validations
-        order.setStatus("confirmed");
+        // 4️⃣ Save order
+        order.setStatus("CONFIRMED");
         return orderRepository.save(order);
     }
 
-    //Circuit breaker fallback when Product Service is unavailable.
-
+    // 5️⃣ Circuit breaker fallback (SIGNATURE CORRECT)
     public Order orderFallback(Order order, Throwable t) {
-        order.setStatus("Request Failed,order service is down");
+        order.setStatus("FAILED");
         return order;
     }
 }

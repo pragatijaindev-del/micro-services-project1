@@ -26,7 +26,7 @@ public class AuthController {
     @PostMapping("/login")
     public String login(@RequestBody LoginRequest loginRequest) {
         System.out.println("Login controller hit");
-        return service.login(loginRequest.getMail(), loginRequest.getPassword());
+        return service.login(loginRequest.getEmail(), loginRequest.getPassword());
     }
 
     @GetMapping("/test")

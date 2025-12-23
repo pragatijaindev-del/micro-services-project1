@@ -1,17 +1,19 @@
 package com.example.user_service.dto;
 
-
 public class LoginRequest {
 
-    private String mail;
+    private String email;
     private String password;
 
-    public String getMail() {
-        return mail;
+    public LoginRequest() {
     }
 
-    public void setMail(String mail) {
-        this.mail = mail;
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {
@@ -22,16 +24,15 @@ public class LoginRequest {
         this.password = password;
     }
 
-    public LoginRequest(String mail, String password) {
-        this.mail = mail;
-        this.password = password;
-    }
+	public LoginRequest(String email, String password) {
+		super();
+		this.email = email;
+		this.password = password;
+	}
 
-    @Override
-    public String toString() {
-        return "LoginRequest{" +
-                "mail='" + mail + '\'' +
-                ", password='" + password + '\'' +
-                '}';
-    }
+	@Override
+	public String toString() {
+		return "LoginRequest [email=" + email + ", password=" + password + "]";
+	}
+    
 }

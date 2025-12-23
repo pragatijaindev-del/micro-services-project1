@@ -60,7 +60,12 @@ public class Product {
         this.price = price;
     }
 
-    @Override
+    
+    public Product() {
+		
+	}
+
+	@Override
     public String toString() {
         return "Product{" +
                 "id=" + id +

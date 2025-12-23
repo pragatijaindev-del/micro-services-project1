@@ -23,34 +23,48 @@ public class UserServiceImpl implements UserService {
     // User registration
     @Override
     public User register(User user) {
-        // Encrypt password before saving
+
+        if (repo.findByEmail(user.getEmail()) != null) {
+            throw new BusinessException("Email already registered");
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return repo.save(user);
     }
 
+
+    
+    
     // User login
     @Override
     public String login(String email, String password) {
 
-        // Fetch user by email
         User user = repo.findByEmail(email);
 
         if (user == null) {
             throw new BusinessException("User not found");
         }
 
-        // Match raw password with encrypted password
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new BusinessException("Invalid credentials");
         }
 
-        // Generate JWT token
         return jwtUtil.generateToken(user.getEmail());
     }
 
-    // Fetch user by ID
+
+
+
     @Override
     public User getUserById(Long id) {
-        return repo.findById(id).orElse(null);
+
+        //  Fetch user from DB by id
+        User user = repo.findById(id)
+                .orElseThrow(() -> 
+                    new BusinessException("User not found with id: " + id)
+                );
+
+        // Return valid user
+        return user;
     }
 }
