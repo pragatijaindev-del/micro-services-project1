@@ -1,45 +1,72 @@
+
 spring:
   application:
     name: api-gateway
-
+  
   cloud:
     gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-
+      
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "https://yourdomain.com"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      
       routes:
+        
         - id: user-service
-          uri: lb://USER-SERVICE
+          uri: lb://USER-SERVICE  
+         
           predicates:
-            - Path=/users/**,/auth/**
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
 
-        - id: product-service
-          uri: lb://PRODUCT-SERVICE
-          predicates:
-            - Path=/products/**
-
+        
         - id: order-service
           uri: lb://ORDER-SERVICE
           predicates:
-            - Path=/orders/**
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=1
+
+        
+        - id: product-service
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=1
+
+       
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - StripPrefix=1
+
+server:
+  port: 8080
 
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus,metrics
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
 
-  endpoint:
-    prometheus:
-      enabled: true
 
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
+
