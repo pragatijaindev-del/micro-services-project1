@@ -1,7 +1,10 @@
 version: '3.8'
 
 services:
+
+  # =========================
   # MySQL Database
+  # =========================
   mysql-db:
     image: mysql:8.0
     container_name: mysql-container
@@ -20,7 +23,9 @@ services:
       timeout: 5s
       retries: 10
 
+  # =========================
   # Eureka Server
+  # =========================
   eureka:
     build: ./eureka-server
     container_name: eureka-server
@@ -35,7 +40,9 @@ services:
       retries: 10
     restart: on-failure
 
+  # =========================
   # API Gateway
+  # =========================
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
@@ -51,7 +58,9 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     restart: on-failure
 
+  # =========================
   # User Service
+  # =========================
   user-service:
     build: ./user-service
     container_name: user-service
@@ -72,7 +81,9 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     restart: on-failure
 
+  # =========================
   # Product Service
+  # =========================
   product-service:
     build: ./product-service
     container_name: product-service
@@ -83,6 +94,8 @@ services:
         condition: service_healthy
       eureka:
         condition: service_healthy
+      kafka:
+        condition: service_started
     networks:
       - microservices-network
     environment:
@@ -90,10 +103,13 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root123
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - SPRING_PROFILES_ACTIVE=docker
     restart: on-failure
 
+  # =========================
   # Order Service
+  # =========================
   order-service:
     build: ./order-service
     container_name: order-service
@@ -104,6 +120,8 @@ services:
         condition: service_healthy
       eureka:
         condition: service_healthy
+      kafka:
+        condition: service_started
     networks:
       - microservices-network
     environment:
@@ -111,12 +129,51 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root123
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - SPRING_PROFILES_ACTIVE=docker
     restart: on-failure
 
+  # =========================
+  # ZOOKEEPER (Kafka dependency)
+  # =========================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+    networks:
+      - microservices-network
+
+  # =========================
+  # KAFKA (Choreography backbone)
+  # =========================
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - microservices-network
+
+# =========================
+# Volumes
+# =========================
 volumes:
   mysql-data:
 
+# =========================
+# Networks
+# =========================
 networks:
   microservices-network:
     driver: bridge

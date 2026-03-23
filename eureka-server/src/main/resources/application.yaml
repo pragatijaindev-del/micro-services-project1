@@ -7,25 +7,32 @@ spring:
 
 eureka:
   client:
-    register-with-eureka: false  # Eureka khud ko register nahi karega
-    fetch-registry: false         # Eureka registry fetch nahi karega
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-  
+    register-with-eureka: false
+    fetch-registry: false
+
   instance:
-    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+    hostname: localhost
     prefer-ip-address: false
-  
+
   server:
-    enable-self-preservation: true  # Production ke liye true rakhein
-    renewal-percent-threshold: 0.85
+    enable-self-preservation: true
     eviction-interval-timer-in-ms: 10000
+
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,prometheus,metrics
+
   endpoint:
-    health:
-      show-details: always
+    prometheus:
+      enabled: true
+
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true

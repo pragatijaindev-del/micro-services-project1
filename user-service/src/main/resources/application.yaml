@@ -1,18 +1,6 @@
-server:
-  port: 8081
-
 spring:
   application:
-    name: USER-SERVICE
-
-  config:
-    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
-
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/userdb?createDatabaseIfNotExist=true}
-    username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:root}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    name: user-service
 
   jpa:
     hibernate:
@@ -21,33 +9,31 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
 
   cloud:
     config:
-      fail-fast: false  # __fail-fast__ galat tha, ye sahi hai
+      fail-fast: false
 
 eureka:
   client:
-    service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    hostname: user-service
-    instance-id: ${spring.application.name}:${random.value}
+
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
+        include: health,info,prometheus,metrics
 
-logging:
-  level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  endpoint:
+    prometheus:
+      enabled: true
+
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true

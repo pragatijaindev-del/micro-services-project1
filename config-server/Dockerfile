@@ -1,4 +1,5 @@
-FROM eclipse-temurin:17-jdk-jammy
+
+FROM openjdk:17-jdk-slim
 WORKDIR /app
 COPY config-repo /app/config-repo
 COPY target/*.jar app.jar

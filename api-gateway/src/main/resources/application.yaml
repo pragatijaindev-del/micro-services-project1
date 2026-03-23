@@ -1,6 +1,3 @@
-server:
-  port: 8080
-
 spring:
   application:
     name: api-gateway
@@ -9,14 +6,14 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true  # enable automatic routes to Eureka server
+          enabled: true
           lower-case-service-id: true
 
       routes:
-        - id: USER-SERVICE
+        - id: user-service
           uri: lb://USER-SERVICE
           predicates:
-            - Path=/users/**, /auth/**
+            - Path=/users/**,/auth/**
 
         - id: product-service
           uri: lb://PRODUCT-SERVICE
@@ -28,19 +25,21 @@ spring:
           predicates:
             - Path=/orders/**
 
-eureka:
-  client:
-    service-url:
-      # Docker ke liye service-registry container ka naam use karein
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
-    fetch-registry: true
-    register-with-eureka: true
-  instance:
-    prefer-ip-address: true
-    hostname: api-gateway
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: health,info,prometheus,metrics
+
+  endpoint:
+    prometheus:
+      enabled: true
+
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true

@@ -12,22 +12,36 @@ spring:
     config:
       server:
         native:
-          # Docker ke liye path update karein
-          search-locations: ${CONFIG_REPO_PATH:file:/app/config-repo}
+          search-locations: file:///C:/microservice_project1/config-server/config-repo
+      fail-fast: false
+      health:
+        enabled: true
 
-eureka:
-  client:
-    service-url:
-      # Docker environment variable use karein
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    hostname: config-server
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,refresh
+        include: health,info,refresh,env,metrics,prometheus
+
+  endpoint:
+    prometheus:
+      enabled: true
+
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: Centralized Configuration Server
+    version: 1.0.0
